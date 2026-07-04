@@ -5,6 +5,10 @@
 *"looks good"*, or until the loop detects a stall. **duet never commits or
 pushes.** The diff is left uncommitted for a human to inspect and approve.
 
+![duet in action](demo/duet-demo.gif)
+
+> An illustrative reconstruction of a session on a toy example. See [`demo/`](demo/).
+
 ```
 ┌──────────┐   writes / edits files    ┌───────────┐
 │ builder  │ ────────────────────────► │  working  │
