@@ -1,0 +1,4 @@
+# duet runtime artifacts (created inside target repos, but ignore locally too)
+.duet/
+__pycache__/
+*.pyc
