@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-duet.py — An adversarial, cross-vendor code loop.
+duet.py: An adversarial, cross-vendor code loop.
 
 One model writes the code, a *different vendor's* model reviews it, and they
-loop until the reviewer says "looks good" (LGTM) — or until the loop detects a
+loop until the reviewer says "looks good" (LGTM), or until the loop detects a
 stall/oscillation. duet never commits or pushes: the diff is left uncommitted
 for a human to inspect and approve.
 
@@ -41,7 +41,7 @@ Notifications (all optional, best-effort):
     Webhook:  set DUET_WEBHOOK_URL to POST {text, event, task} as JSON on every
               human-relevant event (start, converge, stall, secret, end).
 
-No third-party dependencies — Python 3.8+ standard library only.
+No third-party dependencies: Python 3.8+ standard library only.
 MIT licensed.
 """
 import argparse
@@ -104,9 +104,9 @@ NO_CHANGES_PATTERNS = [
 # commit/push/reset --hard behind your back. The diff is what you review.
 GIT_GUARD_SCRIPT = """\
 #!/bin/bash
-# duet git guard — blocks history-mutating writes, allows everything else.
+# duet git guard: blocks history-mutating writes, allows everything else.
 SUBCMD="${1:-}"
-BLOCK_MSG="DUET GUARD: git $* — commit/push/merge/rebase/reset --hard are blocked during a session. The diff stays uncommitted for human review."
+BLOCK_MSG="DUET GUARD: git $*: commit/push/merge/rebase/reset --hard are blocked during a session. The diff stays uncommitted for human review."
 case "$SUBCMD" in
     commit|push|merge|rebase)
         echo "$BLOCK_MSG" >&2; exit 1;;
@@ -377,7 +377,7 @@ def git_preflight(s: Session) -> str:
     if dirty:
         files = "\n".join(f"  {l}" for l in dirty.splitlines()[:10])
         msg = (f"Session refused ({s.task}): the working tree is dirty.\n{files}\n"
-               f"Commit / stash / checkout first — duet needs a clean start so the "
+               f"Commit / stash / checkout first; duet needs a clean start so the "
                f"diff it produces is entirely its own.")
         s.notif.alert(msg, title=f"duet {s.task}: dirty tree")
         sys.exit(msg)
@@ -409,8 +409,8 @@ def cmd_doctor(task: str):
     dirty = subprocess.run([real_git(), "status", "--porcelain"],
                            capture_output=True, text=True, cwd=repo).stdout.strip()
     print(f"branch : {cur or '(detached / none)'}")
-    print(f"tree   : {'clean' if not dirty else 'DIRTY (' + str(len(dirty.splitlines())) + ' files) — clean it before a run'}")
-    print(f"webhook: {'configured' if WEBHOOK_URL else 'not set (DUET_WEBHOOK_URL) — local notifications only'}")
+    print(f"tree   : {'clean' if not dirty else 'DIRTY (' + str(len(dirty.splitlines())) + ' files); clean it before a run'}")
+    print(f"webhook: {'configured' if WEBHOOK_URL else 'not set (DUET_WEBHOOK_URL); local notifications only'}")
     print(f"desktop: {'notify-send present' if shutil.which('notify-send') else 'no notify-send (silent)'}")
 
 
@@ -460,7 +460,7 @@ def cmd_run(task_arg: str, objective: str, new_branch: bool,
     }
     s.save()
 
-    nf.alert(f"Session started — `{task}`\nObjective: `{objective[:200]}`\nBranch: `{branch}`",
+    nf.alert(f"Session started: `{task}`\nObjective: `{objective[:200]}`\nBranch: `{branch}`",
              title=f"duet {task}: started", event="start")
 
     history, prompt, round_offset, no_changes_streak = [], \
@@ -475,21 +475,21 @@ def cmd_run(task_arg: str, objective: str, new_branch: bool,
             if s.stop_file.exists():
                 done = True; break
 
-            nf.progress(f"E{n} — builder…")
+            nf.progress(f"E{n}: builder…")
             try:
                 builder_out = s.run_builder(prompt, n, guarded_path)
             except subprocess.TimeoutExpired:
-                nf.alert(f"Builder timeout E{n} ({task}) — stopping", title=f"duet {task}: timeout", event="timeout"); done = True; break
+                nf.alert(f"Builder timeout E{n} ({task}), stopping", title=f"duet {task}: timeout", event="timeout"); done = True; break
 
             if "duet guard:" in builder_out.lower():
                 nf.log(f"git guard triggered E{n}")
 
             if not s.changed_files() and any(p in builder_out.lower() for p in BUILDER_ALREADY_DONE_PATTERNS):
-                nf.alert(f"Already implemented — {task} E{n}\n{builder_out[:500]}", title=f"duet {task}: already done", event="converge")
+                nf.alert(f"Already implemented: {task} E{n}\n{builder_out[:500]}", title=f"duet {task}: already done", event="converge")
                 s.state.update(converged=True, status="already_done"); s.save(); done = True; break
 
             if any(p in builder_out.lower() for p in BUILDER_LIMIT_PATTERNS):
-                nf.alert(f"Builder rate limit — {task} E{n}\nPaused. `duet resume {task}` when the quota returns.",
+                nf.alert(f"Builder rate limit: {task} E{n}\nPaused. `duet resume {task}` when the quota returns.",
                          title=f"duet {task}: rate limit", event="paused")
                 s.state["status"] = "paused"; s.save()
                 if not s.wait_for_resume():
@@ -500,14 +500,14 @@ def cmd_run(task_arg: str, objective: str, new_branch: bool,
                 s.state["warnings"].append(h)
                 nf.alert(f"Secret alert (builder) {task}\n{h}", title=f"duet {task}: secret?", event="secret")
 
-            nf.progress(f"E{n} — reviewer…")
+            nf.progress(f"E{n}: reviewer…")
             try:
                 review_out = s.run_reviewer(n)
             except subprocess.TimeoutExpired:
-                nf.alert(f"Reviewer timeout E{n} ({task}) — stopping", title=f"duet {task}: timeout", event="timeout"); done = True; break
+                nf.alert(f"Reviewer timeout E{n} ({task}), stopping", title=f"duet {task}: timeout", event="timeout"); done = True; break
 
             if review_out.startswith("[reviewer error:") or review_out == "[reviewer: empty response]":
-                nf.alert(f"Reviewer error — {task} E{n}\n`{review_out}`\nPaused. `duet resume {task}` after fixing.",
+                nf.alert(f"Reviewer error: {task} E{n}\n`{review_out}`\nPaused. `duet resume {task}` after fixing.",
                          title=f"duet {task}: reviewer error", event="paused")
                 s.state["status"] = "paused"; s.save()
                 if not s.wait_for_resume():
@@ -522,7 +522,7 @@ def cmd_run(task_arg: str, objective: str, new_branch: bool,
             if reviewer_no_changes(review_out):
                 no_changes_streak += 1
                 if no_changes_streak >= 2:
-                    nf.alert(f"Stuck — {task} E{n}\nThe builder is not modifying any files ({no_changes_streak}x).",
+                    nf.alert(f"Stuck: {task} E{n}\nThe builder is not modifying any files ({no_changes_streak}x).",
                              title=f"duet {task}: no changes", event="stall")
                     s.state["status"] = "stalled"; s.save(); done = True; break
                 prompt = (f"Objective: {objective}\n\nIMPORTANT: the reviewer sees no git changes. "
@@ -531,21 +531,21 @@ def cmd_run(task_arg: str, objective: str, new_branch: bool,
             no_changes_streak = 0
 
             if converged(review_out):
-                nf.alert(f"Converged — {task} E{n} ✅\nReviewer:\n{review_out[:500]}\n\nUncommitted diff, ready for you to validate.",
+                nf.alert(f"Converged: {task} E{n} ✅\nReviewer:\n{review_out[:500]}\n\nUncommitted diff, ready for you to validate.",
                          title=f"duet {task}: LGTM ✅", event="converge")
                 s.state.update(converged=True, status="converged"); s.save(); done = True; break
 
             if stalled(history):
-                nf.alert(f"Stalled (repeating) — {task} E{n}\n{review_out[:300]}\n`duet resume/stop {task}`",
+                nf.alert(f"Stalled (repeating): {task} E{n}\n{review_out[:300]}\n`duet resume/stop {task}`",
                          title=f"duet {task}: stalled", event="stall")
                 s.state["status"] = "stalled"; s.save(); done = True; break
 
             if oscillating(history):
-                nf.alert(f"Oscillating — {task} E{n}\nThe objective may be contradictory.\n{review_out[:300]}",
+                nf.alert(f"Oscillating: {task} E{n}\nThe objective may be contradictory.\n{review_out[:300]}",
                          title=f"duet {task}: oscillation", event="stall")
                 s.state["status"] = "stalled"; s.save(); done = True; break
 
-            nf.progress(f"E{n} — reviewer: {review_out[:250]}")
+            nf.progress(f"E{n}, reviewer: {review_out[:250]}")
             prompt = (f"Objective: {objective}\n\nReviewer feedback E{n}:\n{review_out}\n\n"
                       f"Apply the fixes. Max 300 words.")
 
@@ -553,7 +553,7 @@ def cmd_run(task_arg: str, objective: str, new_branch: bool,
             break
 
         last = history[-1] if history else "N/A"
-        nf.alert(f"Paused — {MAX_EXCHANGES} exchanges ({task})\nNot converged yet.\n{last[:300]}\n"
+        nf.alert(f"Paused: {MAX_EXCHANGES} exchanges ({task})\nNot converged yet.\n{last[:300]}\n"
                  f"`duet resume {task}` / `duet stop {task}`",
                  title=f"duet {task}: paused after {MAX_EXCHANGES}", event="paused")
         s.state["status"] = "paused"; s.save()
@@ -570,7 +570,7 @@ def cmd_run(task_arg: str, objective: str, new_branch: bool,
     files = s.changed_files()
     diff = s.git(["diff", "HEAD"]).stdout
     (s.bus / "final.diff").write_text(diff)
-    summary = (f"Session ended — {task}\nStatus: {s.state['status']}\n"
+    summary = (f"Session ended: {task}\nStatus: {s.state['status']}\n"
                f"Branch: `{branch}`\nFiles: {', '.join(files[:6]) or 'none'}\n"
                f"Diff: `.duet/final.diff` ({len(diff.splitlines())} lines)\n"
                f"Commits: 0 (diff left uncommitted for your review)")

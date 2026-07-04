@@ -2,7 +2,7 @@
 
 **An adversarial, cross-vendor code loop.** One model writes the code, a
 **different vendor's** model reviews it, and they loop until the reviewer says
-*"looks good"* — or until the loop detects a stall. **duet never commits or
+*"looks good"*, or until the loop detects a stall. **duet never commits or
 pushes.** The diff is left uncommitted for a human to inspect and approve.
 
 ```
@@ -21,7 +21,7 @@ pushes.** The diff is left uncommitted for a human to inspect and approve.
 
 ## Why cross-vendor?
 
-A model reviewing its own output shares its own blind spots — the same
+A model reviewing its own output shares its own blind spots: the same
 reasoning that produced a bug tends to wave it through on review. A reviewer
 from a **different vendor** catches classes of mistakes the author's model
 systematically misses. duet makes that the default: the builder and the
@@ -30,7 +30,7 @@ reviewer are two different CLI tools, from two different labs.
 The other opinionated choice: **the loop can never write git history.** A shim
 on the builder's `PATH` blocks `commit`/`push`/`merge`/`rebase`/`reset --hard`
 for the duration of a session. When the loop converges you get a diff, not a
-commit — you stay the only one who merges.
+commit. You stay the only one who merges.
 
 ## How it compares
 
@@ -38,8 +38,8 @@ Most parallel-agent tools (Claude Squad, Conductor, …) run N agents side by
 side, each in its own worktree, and let *you* review the results. duet is a
 different shape: a **single task**, driven by a **two-model adversarial loop**
 that decides for itself when the work is actually done (reviewer LGTM), and
-that refuses to touch git history. It composes fine with the worktree tools —
-point duet at one worktree.
+that refuses to touch git history. It composes fine with the worktree tools.
+Point duet at one worktree.
 
 ## Install
 
@@ -53,10 +53,10 @@ chmod +x duet.py
 
 You need the two CLIs on your `PATH`:
 
-- **builder** — [Claude Code](https://claude.com/claude-code) (`claude`)
-- **reviewer** — [Codex CLI](https://developers.openai.com/codex/cli) (`codex`), logged in (`codex login`)
+- **builder**: [Claude Code](https://claude.com/claude-code) (`claude`)
+- **reviewer**: [Codex CLI](https://developers.openai.com/codex/cli) (`codex`), logged in (`codex login`)
 
-Both are swappable — see *Configuration*.
+Both are swappable; see *Configuration*.
 
 ## Usage
 
@@ -76,25 +76,25 @@ duet stop   ~/code/myapp     # graceful stop after the current exchange
 duet resume ~/code/myapp     # continue a paused session (rate limit, 10-exchange pause, …)
 ```
 
-The working tree must be **clean** before a run — duet needs the diff it
+The working tree must be **clean** before a run, because duet needs the diff it
 produces to be entirely its own.
 
 ### What you get
 
 Everything lands in `.duet/` inside the repo:
 
-- `session.json` — live state (status, exchange count, files, per-exchange excerpts)
-- `session.log` — human-readable log
-- `NNN_builder.txt` / `NNN_reviewer.txt` — full output of each turn
-- `final.diff` — the complete diff at the end, ready for `git apply` review
+- `session.json`: live state (status, exchange count, files, per-exchange excerpts)
+- `session.log`: human-readable log
+- `NNN_builder.txt` / `NNN_reviewer.txt`: full output of each turn
+- `final.diff`: the complete diff at the end, ready for `git apply` review
 
 The loop ends in one of: **converged** (reviewer LGTM), **already_done**,
 **stalled** (repeating or no changes), or **paused** (rate limit / max
-exchanges — resume when ready).
+exchanges, resume when ready).
 
 ## Configuration
 
-Everything is env vars or flags — no config file.
+Everything is env vars or flags, with no config file.
 
 | Env var | Flag | Default | Meaning |
 |---|---|---|---|
@@ -139,4 +139,4 @@ battle-tested part; the packaging is new. Issues and PRs welcome.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).

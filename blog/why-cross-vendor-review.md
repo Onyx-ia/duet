@@ -1,6 +1,6 @@
 ---
 title: "Why I let a rival model review my AI's code"
-description: "A model reviewing its own output shares its own blind spots. So I put a reviewer from a different vendor in the loop — and never let either of them commit."
+description: "A model reviewing its own output shares its own blind spots. So I put a reviewer from a different vendor in the loop, and never let either of them commit."
 tags: [ai, llm, code-review, agents, claude, codex]
 canonical_url: ""
 ---
@@ -14,13 +14,13 @@ and reassure me. It was almost always confident. It was often wrong.
 
 That's the thing nobody tells you about self-review: it's theater. The model
 that just wrote a subtly broken diff is the least qualified thing in the world
-to catch that the diff is broken — because the exact reasoning that produced the
+to catch that the diff is broken, because the exact reasoning that produced the
 bug is the reasoning it uses to review it. Ask it to check its work and it
 re-derives the same wrong answer, then congratulates itself. Shared author,
 shared blind spots.
 
 Human teams figured this out decades ago. You don't merge your own PR. The
-reviewer isn't valuable because they're smarter — they're valuable because
+reviewer isn't valuable because they're smarter. They're valuable because
 they're *someone else*, with a different mental model, who didn't fall in love
 with the approach while writing it. The disagreement is the point.
 
@@ -30,19 +30,19 @@ So I asked an obvious question: what if the reviewer wasn't just a different
 ## Different lab, different blind spots
 
 Models from the same family fail in correlated ways. They were trained on
-overlapping data, tuned by overlapping teams, and they inherit the same habits —
-the same favorite libraries, the same off-by-one tendencies, the same
-too-clever refactors, the same confident hand-waving over the tricky edge case.
-A model reviewing a sibling's output nods along, because the sibling made
-exactly the kinds of choices it would have made.
+overlapping data, tuned by overlapping teams, and they inherit the same habits:
+the same favorite libraries, the same off-by-one tendencies, the same too-clever
+refactors, the same confident hand-waving over the tricky edge case. A model
+reviewing a sibling's output nods along, because the sibling made exactly the
+kinds of choices it would have made.
 
 Cross the vendor line and the correlation breaks. Point one lab's model at
 another lab's diff and it stops being polite. It flags the assumption the author
 never questioned. It notices the error handling that isn't there. It argues.
 
-That adversarial friction — one model that wants to ship, another that wants to
-poke holes — is the whole mechanism. It's not that either model is better. It's
-that they're *different*, and the difference does the work.
+That adversarial friction, one model that wants to ship and another that wants
+to poke holes, is the whole mechanism. It's not that either model is better.
+It's that they're *different*, and the difference does the work.
 
 ## How I wired it up
 
@@ -52,10 +52,10 @@ purpose:
 1. **The builder** (one vendor's coding agent) writes and edits real files to
    satisfy an objective.
 2. **The reviewer** (a *different* vendor's model) reviews the uncommitted diff
-   and comes back with concrete, prioritized feedback — or says nothing's wrong.
+   and comes back with concrete, prioritized feedback, or says nothing's wrong.
 3. The builder applies the fixes. Back to step 2.
-4. This repeats until the reviewer genuinely has no blocking issues left —
-   until it stops finding things.
+4. This repeats until the reviewer genuinely has no blocking issues left, until
+   it stops finding things.
 
 Then it stops and hands me a diff.
 
@@ -67,14 +67,14 @@ convergence (the reviewer runs out of real objections), stall (they're repeating
 themselves), and oscillation (the builder ping-pongs between two states because
 the objective is contradictory). Getting that classification right is most of
 what makes the thing usable instead of a token bonfire. A reviewer that invents
-busywork to look diligent — "consider renaming this variable" on a correct diff
-— is a bug, not a feature, and the loop has to be able to tell "this is a real
-blocker" from "this is polish."
+busywork to look diligent, like "consider renaming this variable" on a correct
+diff, is a bug, not a feature, and the loop has to be able to tell "this is a
+real blocker" from "this is polish."
 
 **Neither model is allowed to touch git.** This was non-negotiable for me. For
 the duration of a session, a shim on the builder's `PATH` blocks
 `commit`, `push`, `merge`, `rebase`, and `reset --hard`. When the loop converges,
-I don't get a commit — I get a diff. The agents can argue all they want; the one
+I don't get a commit. I get a diff. The agents can argue all they want; the one
 who merges is me. I read `final.diff`, and I decide. No agent writes my git
 history. Ever.
 
